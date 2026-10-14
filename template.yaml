@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  unit-converter
+  Temperature unit-conversion grader — serverless REST API + browser UI
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+    Description: Deployment environment (dev | prod)
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    MemorySize: 128
+    Environment:
+      Variables:
+        NODE_ENV: !Ref Environment
+
+Resources:
+
+  UnitConverterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub unit-converter-${Environment}
+      Description: Grades student temperature-conversion responses
+      CodeUri: src/
+      Handler: handler.handler
+      Events:
+        GetUI:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: GET
+            ApiId: !Ref UnitConverterApi
+        PostConvert:
+          Type: HttpApi
+          Properties:
+            Path: /convert
+            Method: POST
+            ApiId: !Ref UnitConverterApi
+        Options:
+          Type: HttpApi
+          Properties:
+            Path: /convert
+            Method: OPTIONS
+            ApiId: !Ref UnitConverterApi
+
+  UnitConverterApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: !Sub Unit Converter API (${Environment})
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+
+Outputs:
+  ApiUrl:
+    Description: Public API / browser URL
+    Value: !Sub 'https://${UnitConverterApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub UnitConverterApiUrl-${Environment}
+
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt UnitConverterFunction.Arn

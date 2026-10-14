@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit Converter Grader</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --border: #d1d9e0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --text: #1e293b;
+      --muted: #64748b;
+      --correct: #16a34a;
+      --correct-bg: #f0fdf4;
+      --incorrect: #dc2626;
+      --incorrect-bg: #fef2f2;
+      --invalid: #d97706;
+      --invalid-bg: #fffbeb;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    header p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+    label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    input, select {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--surface);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn {
+      margin-top: 24px;
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn:hover  { background: var(--primary-hover); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .result {
+      margin-top: 24px;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      display: none;
+    }
+    .result.visible { display: block; }
+    .result.correct   { background: var(--correct-bg);   border: 1px solid #86efac; }
+    .result.incorrect { background: var(--incorrect-bg); border: 1px solid #fca5a5; }
+    .result.invalid   { background: var(--invalid-bg);   border: 1px solid #fcd34d; }
+
+    .result-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .result.correct   .result-label { color: var(--correct); }
+    .result.incorrect .result-label { color: var(--incorrect); }
+    .result.invalid   .result-label { color: var(--invalid); }
+
+    .result-detail {
+      margin-top: 6px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .error-msg {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: var(--incorrect-bg);
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius);
+      color: var(--incorrect);
+      font-size: 0.875rem;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    @media (max-width: 480px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+      .card { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Unit Conversion</h1>
+      <p>Convert units of temperature instantly.</p>
+    </header>
+
+    <div class="card">
+      <form id="graderForm" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="inputValue">Input Value</label>
+            <input
+              type="number"
+              id="inputValue"
+              name="inputValue"
+              placeholder="e.g. 84.2"
+              step="any"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="inputUnit">Input Unit</label>
+            <select id="inputUnit" name="inputUnit" required>
+              <option value="" disabled selected>Select unit…</option>
+              <option value="celsius">Celsius</option>
+              <option value="fahrenheit">Fahrenheit</option>
+              <option value="kelvin">Kelvin</option>
+              <option value="rankine">Rankine</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="targetUnit">Target Unit</label>
+            <select id="targetUnit" name="targetUnit" required>
+              <option value="" disabled selected>Select unit…</option>
+              <option value="celsius">Celsius</option>
+              <option value="fahrenheit">Fahrenheit</option>
+              <option value="kelvin">Kelvin</option>
+              <option value="rankine">Rankine</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="studentResponse">Student Response</label>
+            <input
+              type="text"
+              id="studentResponse"
+              name="studentResponse"
+              placeholder="e.g. 543.94"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">Grade Response</button>
+      </form>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <div class="result" id="resultBox">
+        <div class="result-label" id="resultLabel"></div>
+        <div class="result-detail" id="resultDetail"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('graderForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultBox = document.getElementById('resultBox');
+    const resultLabel = document.getElementById('resultLabel');
+    const resultDetail = document.getElementById('resultDetail');
+    const errorMsg = document.getElementById('errorMsg');
+
+    const RESULT_MESSAGES = {
+      correct: 'The student\'s answer is correct.',
+      incorrect: (auth) => `The student\'s answer is incorrect. The correct answer is ${auth}.`,
+      invalid: 'The input or target unit of measure is not recognized.',
+    };
+
+    function showResult(data) {
+      resultBox.className = `result visible ${data.result}`;
+      resultLabel.textContent = data.result;
+      if (data.result === 'correct') {
+        resultDetail.textContent = RESULT_MESSAGES.correct;
+      } else if (data.result === 'incorrect') {
+        resultDetail.textContent =
+          data.authoritative != null
+            ? RESULT_MESSAGES.incorrect(data.authoritative)
+            : 'The student\'s answer does not match the authoritative answer.';
+      } else {
+        resultDetail.textContent = RESULT_MESSAGES.invalid;
+      }
+    }
+
+    function showError(message) {
+      errorMsg.textContent = message;
+      errorMsg.classList.add('visible');
+    }
+
+    function reset() {
+      resultBox.className = 'result';
+      errorMsg.classList.remove('visible');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      reset();
+
+      const inputValue = document.getElementById('inputValue').value.trim();
+      const inputUnit = document.getElementById('inputUnit').value;
+      const targetUnit = document.getElementById('targetUnit').value;
+      const studentResponse = document.getElementById('studentResponse').value.trim();
+
+      if (!inputValue || !inputUnit || !targetUnit || !studentResponse) {
+        showError('Please fill in all fields.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Grading…';
+
+      try {
+        const res = await fetch('/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            inputValue: parseFloat(inputValue),
+            inputUnit,
+            targetUnit,
+            studentResponse,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showError(err.error || `Server error: ${res.status}`);
+          return;
+        }
+
+        const data = await res.json();
+        showResult(data);
+      } catch (err) {
+        showError('Network error. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Grade Response';
+      }
+    });
+  </script>
+</body>
+</html>

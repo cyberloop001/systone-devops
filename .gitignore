@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+.aws-sam/
+.venv/
+*.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
